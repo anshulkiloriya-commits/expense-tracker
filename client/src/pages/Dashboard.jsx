@@ -7,13 +7,13 @@ export default function Dashboard() {
   const [list, setList] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
+  const [month, setMonth] = useState('');
 
   const load = async () => {
     try {
       const { data } = await api.get('/transactions');
       setList(data);
     } catch (e) {
-      // token expired or invalid, send user back to login
       localStorage.clear();
       location.href = '/login';
     }
@@ -52,9 +52,19 @@ export default function Dashboard() {
     location.href = '/login';
   };
 
-  const income = list.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = list.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  // month filter: month looks like "2026-10"
+  const shown = month ? list.filter(t => t.date.slice(0, 7) === month) : list;
+
+  const income = shown.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = shown.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
+
+  // total expense per category
+  const byCategory = {};
+  shown.filter(t => t.type === 'expense').forEach(t => {
+    byCategory[t.category] = (byCategory[t.category] || 0) + t.amount;
+  });
+  const maxCat = Math.max(...Object.values(byCategory), 1);
 
   return (
     <div className="dashboard">
@@ -63,11 +73,32 @@ export default function Dashboard() {
         <button className="logout-btn" onClick={logout}>Logout</button>
       </div>
 
+      <div className="filter-row">
+        <label>Filter by month: </label>
+        <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
+        {month && <button className="clear-btn" onClick={() => setMonth('')}>Clear</button>}
+      </div>
+
       <div className="summary">
         <div className="box">Balance<br /><b>₹{balance}</b></div>
         <div className="box income">Income<br /><b>₹{income}</b></div>
         <div className="box expense">Expense<br /><b>₹{expense}</b></div>
       </div>
+
+      {Object.keys(byCategory).length > 0 && (
+        <div className="card form-card">
+          <h3>Spending by category</h3>
+          {Object.entries(byCategory).map(([cat, amt]) => (
+            <div key={cat} className="cat-row">
+              <span className="cat-name">{cat}</span>
+              <div className="cat-bar">
+                <div className="cat-fill" style={{ width: `${(amt / maxCat) * 100}%` }} />
+              </div>
+              <span>₹{amt}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="card form-card">
         <h3>Add transaction</h3>
@@ -83,9 +114,9 @@ export default function Dashboard() {
       </div>
 
       <h3>Transactions</h3>
-      {list.length === 0 && <p>No transactions yet.</p>}
+      {shown.length === 0 && <p>No transactions found.</p>}
       <ul className="list">
-        {list.map(t => (
+        {shown.map(t => (
           <li key={t._id}>
             <div>
               <b>{t.title}</b>

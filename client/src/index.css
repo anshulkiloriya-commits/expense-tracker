@@ -26,3 +26,10 @@ button:hover { background: #4338ca; }
 .list span { margin-right: 10px; font-weight: bold; }
 .del-btn { background: #dc2626; padding: 5px 10px; font-size: 12px; }
 .del-btn:hover { background: #b91c1c; }
+
+.filter-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.clear-btn { background: #6b7280; padding: 6px 10px; font-size: 12px; }
+.cat-row { display: flex; align-items: center; gap: 10px; }
+.cat-name { width: 90px; font-size: 14px; }
+.cat-bar { flex: 1; background: #e5e7eb; border-radius: 6px; height: 14px; overflow: hidden; }
+.cat-fill { background: #4f46e5; height: 100%; }
